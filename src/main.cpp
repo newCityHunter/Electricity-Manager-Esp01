@@ -2,17 +2,19 @@
 #include "FirebaseESP8266.h"
 #include <ESP8266WiFi.h>
 
-#define FIREBASE_HOST "xxxxxx.firebaseio.com"
-#define FIREBASE_AUTH "Secrect Code"
-#define WIFI_SSID "Your Wifi Name"
-#define WIFI_PASSWORD "Your Wifi Password"
+#define FIREBASE_HOST "https://xxxxxxxx.firebaseio.com"
+#define FIREBASE_AUTH "database secrect"
+#define WIFI_SSID "your wifi name"
+#define WIFI_PASSWORD "your password"
 
 const int relay1 = 0; //GPIO 0      Air Conditioner
 const int relay2 = 2; //GPIO 2      Ground
 const int relay3 = 1; //GPIO 1 (TX) Light
 const int relay4 = 3; //GPIO 3 (RX) Fan
 
-const String path = "/devices/dec_2/";
+//FirebaseObject esp01;
+
+const String path = "/devices/dec_1/";
 
 //Define FirebaseESP8266 data object for data sending and receiving
 FirebaseData firebaseData;
@@ -37,15 +39,33 @@ void switch_to_UART(int pin1, int pin3)
     Serial.begin(115200);
 }
 
+void setData(int status)
+{
+    if (Firebase.setInt(firebaseData, path + "/isLightOn", status))
+    {
+        //Success
+        Serial.print("Set int data success, int = ");
+        Serial.println(firebaseData.intData());
+        delay(200);
+    }
+    else
+    {
+        //Failed?, get the error reason from firebaseData
+        Serial.print("Error in setInt, ");
+        Serial.println(firebaseData.errorReason());
+        delay(200);
+    }
+}
+
 void getData()
 {
     //Try to get int data from Firebase
-    if (Firebase.getString(firebaseData, path + "/isLightOn"))
+    if (Firebase.getInt(firebaseData, path + "/isLightOn"))
     {
         //Success
         Serial.print("Get int data success, int = ");
-        Serial.println(firebaseData.stringData());
-        if (firebaseData.stringData() == "1")
+        Serial.println(firebaseData.intData());
+        if (firebaseData.intData() == 1)
         {
             digitalWrite(relay1, HIGH);
         }
@@ -90,6 +110,10 @@ void setup()
 
 void loop()
 {
+    setData(1);
+    getData();
+    delay(1000);
+    setData(0);
     getData();
     delay(1000);
 }
